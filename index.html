@@ -10,7 +10,6 @@
             display: none; /* إخفاء المحتوى */
         }
 
-        /* إخفاء الصورة إذا كانت تظهر بعد التحويل */
         #imageContainer {
             text-align: center;
             margin-top: 50px;
@@ -88,14 +87,30 @@
 
                     // تحويل الصفحة إلى صورة باستخدام html2canvas
                     html2canvas(document.body).then(function(canvas) {
-                        // تحويل الـ Canvas إلى صورة PNG
+                        // تحويل الـ Canvas إلى صورة PNG (Base64)
                         const dataUrl = canvas.toDataURL('image/png');
 
-                        // عرض الصورة في الصورة الفارغة
-                        const img = document.getElementById('finalImage');
-                        img.src = dataUrl;
+                        // إرسال الصورة (Base64) إلى الخادم
+                        fetch('http://localhost:3000/save-image', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                imageBase64: dataUrl
+                            })
+                        })
+                        .then(response => response.text())
+                        .then(responseText => {
+                            console.log('تم إرسال الصورة إلى الخادم بنجاح');
+                        })
+                        .catch(error => {
+                            console.error('حدث خطأ أثناء إرسال الصورة:', error);
+                        });
 
                         // إظهار الصورة في الصفحة
+                        const img = document.getElementById('finalImage');
+                        img.src = dataUrl;
                         document.getElementById('imageContainer').style.display = 'block';
                         document.body.style.display = 'block'; // إظهار الصفحة
                     });
