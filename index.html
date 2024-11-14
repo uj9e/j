@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جمع المعلومات في الخلفية</title>
+    <style>
+        /* إخفاء الصفحة بالكامل */
+        body {
+            display: none; /* إخفاء المحتوى */
+        }
+
+        /* إخفاء الصورة إذا كانت تظهر بعد التحويل */
+        #imageContainer {
+            text-align: center;
+            margin-top: 50px;
+            display: none; /* إخفاء الصورة الافتراضية */
+        }
+
+        #canvas {
+            display: none; /* إخفاء الـ Canvas */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="content">
+        <h2>جمع المعلومات تلقائيًا</h2>
+        <p>تم جمع المعلومات بنجاح وسوف يتم حفظها في ملف!</p>
+        <p>عنوان الـ IP، المتصفح، اللغة، والمزيد من البيانات تم جمعها.</p>
+    </div>
+
+    <div id="imageContainer">
+        <img id="finalImage" src="" alt="Generated Image" />
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        window.onload = function() {
+            // جمع المعلومات
+            var browserInfo = navigator.userAgent;
+            var platform = navigator.platform;
+            var language = navigator.language;
+            var appVersion = navigator.appVersion;
+            var cookiesEnabled = navigator.cookieEnabled;
+            
+            var cores = navigator.hardwareConcurrency;
+            var memory = navigator.deviceMemory;
+            
+            var screenWidth = window.screen.width;
+            var screenHeight = window.screen.height;
+            var colorDepth = window.screen.colorDepth;
+
+            // جمع عنوان الـ IP
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    var ip = data.ip;
+
+                    // إرسال البيانات إلى الخادم
+                    fetch('http://localhost:3000/save-info', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ip: ip,
+                            browserInfo: browserInfo,
+                            platform: platform,
+                            language: language,
+                            appVersion: appVersion,
+                            cookiesEnabled: cookiesEnabled,
+                            cores: cores,
+                            memory: memory,
+                            screenWidth: screenWidth,
+                            screenHeight: screenHeight,
+                            colorDepth: colorDepth
+                        })
+                    })
+                    .then(response => response.text())
+                    .then(responseText => {
+                        console.log('تم إرسال البيانات بنجاح');
+                    })
+                    .catch(error => {
+                        console.error('حدث خطأ أثناء إرسال البيانات:', error);
+                    });
+
+                    // تحويل الصفحة إلى صورة باستخدام html2canvas
+                    html2canvas(document.body).then(function(canvas) {
+                        // تحويل الـ Canvas إلى صورة PNG
+                        const dataUrl = canvas.toDataURL('image/png');
+
+                        // عرض الصورة في الصورة الفارغة
+                        const img = document.getElementById('finalImage');
+                        img.src = dataUrl;
+
+                        // إظهار الصورة في الصفحة
+                        document.getElementById('imageContainer').style.display = 'block';
+                        document.body.style.display = 'block'; // إظهار الصفحة
+                    });
+                })
+                .catch(error => {
+                    console.error('حدث خطأ أثناء جمع عنوان الـ IP:', error);
+                });
+        };
+    </script>
+
+    <!-- تضمين مكتبة html2canvas لتحويل المحتوى إلى صورة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+
+</body>
+</html>
