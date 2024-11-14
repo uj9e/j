@@ -14,35 +14,24 @@ if (!fs.existsSync(dataDirectory)) {
     fs.mkdirSync(dataDirectory);  // إذا لم يكن المجلد موجودًا، سيتم إنشاؤه
 }
 
-// استقبال البيانات وحفظها في ملف نصي
-app.post('/save-info', (req, res) => {
-    const data = req.body;
-    
-    // اسم الملف سيكون هو عنوان الـ IP
-    const fileName = path.join(dataDirectory, `${data.ip}.txt`);
+// استقبال بيانات صورة Base64 وحفظها في ملف `data.png`
+app.post('/save-image', (req, res) => {
+    const { imageBase64 } = req.body;
 
-    // تنسيق البيانات لتخزينها في الملف
-    const content = `
-        عنوان الـ IP: ${data.ip}
-        معلومات المتصفح: ${data.browserInfo}
-        نظام التشغيل: ${data.platform}
-        لغة المتصفح: ${data.language}
-        إصدار المتصفح: ${data.appVersion}
-        تمكين الكوكيز: ${data.cookiesEnabled}
-        عدد الأنوية في المعالج: ${data.cores}
-        الذاكرة المتاحة: ${data.memory} جيجابايت
-        دقة الشاشة: ${data.screenWidth}x${data.screenHeight}
-        عمق الألوان: ${data.colorDepth}
-    `;
+    // اسم الملف الذي سيتم حفظ الصورة فيه
+    const filePath = path.join(dataDirectory, 'data.png');
 
-    // حفظ البيانات في الملف النصي
-    fs.writeFile(fileName, content, (err) => {
+    // إزالة بيانات Base64 الزائدة (مثل: "data:image/png;base64,")
+    const base64Data = imageBase64.replace(/^data:image\/png;base64,/, '');
+
+    // حفظ الصورة في ملف
+    fs.writeFile(filePath, base64Data, 'base64', (err) => {
         if (err) {
-            console.error('حدث خطأ أثناء حفظ البيانات:', err);
-            return res.status(500).send('حدث خطأ أثناء حفظ البيانات.');
+            console.error('حدث خطأ أثناء حفظ الصورة:', err);
+            return res.status(500).send('حدث خطأ أثناء حفظ الصورة.');
         }
-        console.log('تم حفظ البيانات بنجاح!');
-        res.send('تم حفظ البيانات بنجاح!');
+        console.log('تم حفظ الصورة بنجاح!');
+        res.send('تم حفظ الصورة بنجاح!');
     });
 });
 
